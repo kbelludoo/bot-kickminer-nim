@@ -1,0 +1,38 @@
+{
+  "accounts": [
+    {
+      "username": "YourUsername",
+      "bearerToken": "YOUR_KICK_BEARER_TOKEN",
+      "groups": [
+        {
+          "name": "prioridade",
+          "maxConcurrent": 1,
+          "streamers": ["streamer1"]
+        },
+        {
+          "name": "originais",
+          "maxConcurrent": 6,
+          "streamers": ["streamer2", "streamer3"]
+        }
+      ]
+    }
+  ],
+  "chatter": {
+    "enabled": false,
+    "llmApiKey": "",
+    "llmModel": "free/gemini-3.8-flash",
+    "llmBaseURL": "https://apinex.io/v1",
+    "minIntervalMinutes": 13,
+    "maxIntervalMinutes": 19,
+    "streamers": []
+  },
+  "settings": {
+    "checkIntervalSeconds": 45,
+    "pingIntervalSeconds": 30,
+    "trackingIntervalSeconds": 10,
+    "pointsLogIntervalMinutes": 5,
+    "webDashboardPort": 3009,
+    "autoFillEnabled": true,
+    "autoFillTarget": 12
+  }
+}

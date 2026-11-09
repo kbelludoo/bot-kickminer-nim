@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📺 Kick Miner Rust — Dashboard</title>
+<style>
+  body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',monospace;margin:0;padding:20px}
+  h1{color:#53fc18;text-shadow:0 0 12px rgba(83,252,24,.5)}
+  .card{background:#111;border:1px solid rgba(83,252,24,.3);border-radius:8px;padding:16px;margin:12px 0}
+  .live{color:#53fc18;font-weight:700}.offline{color:#666}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;background:rgba(83,252,24,.2);color:#53fc18}
+  #status{color:#aaa;font-size:.85rem}
+  table{width:100%;border-collapse:collapse}
+  td,th{padding:6px 10px;border-bottom:1px solid #1a1a1a;text-align:left}
+  th{color:#53fc18;font-size:.8rem}
+  .pts{color:#f7c948;font-weight:700}
+  footer{margin-top:32px;color:#444;font-size:.75rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>📺 Kick Miner Rust</h1>
+<p id="status">Carregando dados...</p>
+<div id="root"></div>
+<footer>Kick Miner Rust • Zero-GC • &lt; 3MB RAM • <a href="https://github.com/kbelludoo/kick-miner-go" style="color:#53fc18">GitHub</a></footer>
+<script>
+const ROOT = document.getElementById('root');
+const STATUS = document.getElementById('status');
+
+async function load() {
+  let data = null;
+  try {
+    const r = await fetch('http://127.0.0.1:3009/api/status', {signal: AbortSignal.timeout(3000)});
+    if (r.ok) data = await r.json();
+  } catch(_) {}
+
+  if (!data) {
+    try {
+      const r = await fetch('./status.json?t=' + Date.now());
+      if (r.ok) data = await r.json();
+    } catch(_) {}
+  }
+
+  if (!data) { STATUS.textContent = '⚠ Sem dados (bot offline ou GitHub Pages)'; return; }
+
+  STATUS.innerHTML = `✅ <b>Uptime:</b> ${data.uptime||'?'} &nbsp; <b>RAM:</b> ${(data.ram_mb||0).toFixed(2)} MB &nbsp; <b>Streams:</b> ${data.total_streams||0} &nbsp; <span class="badge">RUST ACTIVE</span>`;
+
+  const accounts = data.accounts || {};
+  let html = '';
+  for (const [uname, acc] of Object.entries(accounts)) {
+    const streamers = Object.values(acc.streamers || {});
+    const live = streamers.filter(s => s.watching);
+    html += `<div class="card"><h3>👤 ${uname} &nbsp; <span class="badge">${live.length} ao vivo</span> &nbsp; <span class="pts">⭐ ${acc.total_points||0} pts</span></h3>`;
+    html += `<table><tr><th>Streamer</th><th>Status</th><th>Pontos</th><th>Tempo</th></tr>`;
+    for (const s of streamers) {
+      const cls = s.watching ? 'live' : 'offline';
+      const icon = s.is_live ? '🔴' : '⚫';
+      html += `<tr><td class="${cls}">${icon} ${s.streamer}</td><td>${s.watching?'<span class="badge">Assistindo</span>':'—'}</td><td class="pts">${s.points||0}</td><td>${s.watch_time||'—'}</td></tr>`;
+    }
+    html += '</table></div>';
+  }
+
+  const logs = (data.logs || []).slice(-15).reverse();
+  if (logs.length) {
+    html += `<div class="card"><h3>📋 Logs Recentes</h3><pre style="font-size:.8rem;color:#aaa;margin:0">${logs.join('\n')}</pre></div>`;
+  }
+
+  ROOT.innerHTML = html || '<p style="color:#666">Sem dados de conta.</p>';
+}
+
+load();
+setInterval(load, 15000);
+</script>
+</body>
+</html>
